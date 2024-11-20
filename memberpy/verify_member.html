@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Verify Member</title>
+        <link rel="stylesheet" href="style.css">
+
+    
+    <title>Verify Member</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Verify Member</h2>
+        <input type="number" id="memberId" placeholder="Enter Member ID">
+        <button onclick="verifyMember()">Verify</button>
+        <button id="backButton">Back</button>
+        <div class="result" id="result"></div>
+
+
+    <script>
+        
+        // Fungsi untuk tombol Back
+        document.getElementById("backButton").onclick = function () {
+            window.location.href = "index.html"; // Ganti dengan halaman tujuan (misalnya index.html)
+        };
+        function verifyMember() {
+            const memberId = parseInt(document.getElementById("memberId").value);
+            const resultDiv = document.getElementById("result");
+
+            // Ambil data member dari localStorage
+            const members = JSON.parse(localStorage.getItem("members")) || [];
+
+            // Cari member berdasarkan ID
+            const member = members.find(m => m.id === memberId);
+
+            if (member) {
+                resultDiv.innerHTML = `
+                    <p>Member Verified:</p>
+                    <p><strong>ID:</strong> ${member.id}</p>
+                    <p><strong>Name:</strong> ${member.name}</p>
+                    <p><strong>Email:</strong> ${member.email}</p>`;
+                resultDiv.style.color = "green";
+            } else {
+                resultDiv.textContent = "Member not found.";
+                resultDiv.style.color = "red";
+            }
+        }
+    </script>
+</body>
+</html>

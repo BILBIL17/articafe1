@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Member</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Add New Member Arti Cafe</h2>
+        <input type="number" id="newMemberId" placeholder="Enter Member ID">
+        <input type="text" id="newMemberName" placeholder="Enter Member Name">
+        <input type="email" id="newMemberEmail" placeholder="Enter Member Email">
+        <button onclick="addMember()">Add Member</button>
+        <button id="backButton">back</button> 
+        <div class="result" id="result"></div>
+    </div>
+    <script>
+            // Fungsi untuk tombol Back
+            document.getElementById("backButton").onclick = function () {
+            window.location.href = "index.html"; // Ganti dengan halaman tujuan (misalnya index.html)
+        };
+        function addMember() {
+            const newId = parseInt(document.getElementById("newMemberId").value);
+            const newName = document.getElementById("newMemberName").value.trim();
+            const newEmail = document.getElementById("newMemberEmail").value.trim();
+            const resultDiv = document.getElementById("result");
+
+            if (!newId || !newName || !newEmail) {
+                resultDiv.textContent = "All fields are required.";
+                resultDiv.style.color = "red";
+                return;
+            }
+
+            // Ambil data member dari localStorage
+            const members = JSON.parse(localStorage.getItem("members")) || [];
+
+            // Cek apakah ID sudah ada
+            if (members.some(member => member.id === newId)) {
+                resultDiv.textContent = "Member ID already exists.";
+                resultDiv.style.color = "red";
+                return;
+            }
+
+            // Tambahkan member baru ke array
+            members.push({ id: newId, name: newName, email: newEmail });
+
+            // Simpan kembali ke localStorage
+            localStorage.setItem("members", JSON.stringify(members));
+
+            resultDiv.textContent = "Member added successfully!";
+            resultDiv.style.color = "green";
+
+            // Reset input
+            document.getElementById("newMemberId").value = "";
+            document.getElementById("newMemberName").value = "";
+            document.getElementById("newMemberEmail").value = "";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Member List</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Dashboard - Member List</h2>
+        <table id="memberTable" border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Isi data member akan di-generate dari JavaScript -->
+            </tbody>
+        </table>
+        <button id="backButton">Back</button>
+    </div>
+
+    <script>
+        // Fungsi kembali
+        document.getElementById("backButton").onclick = function () {
+            window.location.href = "index.html";
+        };
+
+        // Ambil data member dari localStorage
+        const members = JSON.parse(localStorage.getItem("members")) || [];
+
+        const tbody = document.getElementById("memberTable").getElementsByTagName("tbody")[0];
+
+        members.forEach(member => {
+            const row = document.createElement("tr");
+
+            const idCell = document.createElement("td");
+            idCell.textContent = member.id;
+            row.appendChild(idCell);
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = member.name;
+            row.appendChild(nameCell);
+
+            const emailCell = document.createElement("td");
+            emailCell.textContent = member.email;
+            row.appendChild(emailCell);
+
+            tbody.appendChild(row);
+        });
+    </script>
+</body>
+</html>

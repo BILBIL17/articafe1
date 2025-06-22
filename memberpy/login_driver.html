@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Login Driver</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Login Driver</h2>
+    <input type="number" id="driverId" placeholder="Enter your ID">
+    <button onclick="login()">Login</button>
+    <div class="result" id="result"></div>
+     <button id="backButton">Back</button>
+  </div>
+
+  <script>
+      document.getElementById("backButton").onclick = function () {
+            window.location.href = "index.html"; // Ganti dengan halaman tujuan (misalnya index.html)
+            };
+            
+    function login() {
+      const id = parseInt(document.getElementById("driverId").value);
+      const members = JSON.parse(localStorage.getItem("members")) || [];
+      const result = document.getElementById("result");
+
+      const driver = members.find(m => m.id === id);
+
+      if (driver) {
+        localStorage.setItem("loggedInDriver", JSON.stringify(driver));
+        window.location.href = "driver_dashboard.html";
+      } else {
+        result.textContent = "Driver not found!";
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Driver Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2 id="driverName">Driver Dashboard</h2>
+    <p id="today"></p>
+
+    <input type="number" id="orderCount" placeholder="Jumlah Order Hari Ini">
+    <input type="number" id="pendapatanManual" placeholder="Pendapatan Hari Ini (Rp)">
+    <button onclick="submitAbsensi()">Submit</button>
+    <button onclick="logout()">Logout</button>
+    <div class="result" id="result"></div>
+
+    <h3>Riwayat Laporan</h3>
+    <label for="filterTanggal">Filter Tanggal:</label>
+    <select id="filterTanggal" onchange="renderLog()">
+      <option value="all">Semua Tanggal</option>
+    </select>
+    <table style="width: 100%">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Order</th>
+          <th>Pendapatan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="logTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const driver = JSON.parse(localStorage.getItem("loggedInDriver"));
+    if (!driver) {
+      alert("Belum login!");
+      window.location.href = "login_driver.html";
+    }
+
+    document.getElementById("driverName").textContent = `Selamat datang, ${driver.name}`;
+    const today = new Date().toLocaleDateString("id-ID");
+    document.getElementById("today").textContent = `Tanggal: ${today}`;
+
+    function submitAbsensi() {
+      const order = parseInt(document.getElementById("orderCount").value);
+      const pendapatan = parseInt(document.getElementById("pendapatanManual").value);
+
+      if (!order || !pendapatan) {
+        alert("Mohon isi semua data (order dan pendapatan).");
+        return;
+      }
+
+      const absensi = JSON.parse(localStorage.getItem("absensi")) || {};
+      if (!absensi[driver.id]) absensi[driver.id] = [];
+
+      const sudahAda = absensi[driver.id].find(a => a.tanggal === today);
+      if (sudahAda) {
+        alert("Kamu sudah mengisi absensi hari ini.");
+        return;
+      }
+
+      absensi[driver.id].push({ tanggal: today, order, pendapatan });
+      localStorage.setItem("absensi", JSON.stringify(absensi));
+
+      document.getElementById("result").textContent = "Absensi berhasil disimpan.";
+      document.getElementById("orderCount").value = "";
+      document.getElementById("pendapatanManual").value = "";
+
+      renderLog();
+    }
+
+    function renderLog() {
+      const absensi = JSON.parse(localStorage.getItem("absensi")) || {};
+      const log = absensi[driver.id] || [];
+      const filter = document.getElementById("filterTanggal").value;
+      const tbody = document.getElementById("logTable");
+      tbody.innerHTML = "";
+
+      const tanggalSet = new Set();
+      log.forEach(e => tanggalSet.add(e.tanggal));
+
+      const select = document.getElementById("filterTanggal");
+      if (select.options.length <= 1) {
+        [...tanggalSet].forEach(tgl => {
+          const opt = document.createElement("option");
+          opt.value = tgl;
+          opt.textContent = tgl;
+          select.appendChild(opt);
+        });
+      }
+
+      const filteredLog = filter === "all" ? log : log.filter(e => e.tanggal === filter);
+
+      filteredLog.forEach((entry, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${entry.tanggal}</td>
+          <td>${entry.order}</td>
+          <td>Rp ${entry.pendapatan.toLocaleString()}</td>
+          <td><button onclick="editLog(${index})">Edit</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function editLog(index) {
+      const absensi = JSON.parse(localStorage.getItem("absensi")) || {};
+      const log = absensi[driver.id] || [];
+
+      const entry = log[index];
+
+      const newOrder = parseInt(prompt("Edit jumlah order:", entry.order));
+      const newIncome = parseInt(prompt("Edit pendapatan (Rp):", entry.pendapatan));
+
+      if (!isNaN(newOrder) && !isNaN(newIncome)) {
+        log[index].order = newOrder;
+        log[index].pendapatan = newIncome;
+        absensi[driver.id] = log;
+        localStorage.setItem("absensi", JSON.stringify(absensi));
+        renderLog();
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInDriver");
+      window.location.href = "login_driver.html";
+    }
+
+    renderLog();
+  </script>
+</body>
+</html>

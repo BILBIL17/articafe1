@@ -1,57 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Member List</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Anjem Seka</title>
+
+  <!-- Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- SheetJS (CDN FIXED) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .sidebar {
+      height: 100vh;
+      background-color: #343a40;
+      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      padding-top: 60px;
+    }
+    .sidebar a {
+      color: #adb5bd;
+      text-decoration: none;
+      display: block;
+      padding: 12px 20px;
+    }
+    .sidebar a:hover {
+      background-color: #495057;
+      color: #fff;
+    }
+    .main {
+      margin-left: 220px;
+      padding: 30px;
+    }
+    .card {
+      border-radius: 10px;
+    }
+    table {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .action-buttons button {
+      margin-right: 5px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Admin Dashboard - Member List</h2>
-        <table id="memberTable" border="1" style="width: 100%; border-collapse: collapse;">
+  <div class="sidebar">
+    <h4 class="text-center">Anjem Seka Admin</h4>
+    <a href="#"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="#"><i class="fa-solid fa-users"></i> Members</a>
+    <a href="#" onclick="exportToExcel()"><i class="fa-solid fa-download"></i> Export</a>
+    <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+    <a href="#" onclick="logoutAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <div class="main">
+    <div class="container-fluid">
+      <h2 class="mb-4">Welcome, Admin 👋</h2>
+
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card text-white bg-primary">
+            <div class="card-body">
+              <h5 class="card-title">Total Members</h5>
+              <p class="card-text" id="memberCount">Loading...</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-white bg-success">
+            <div class="card-body">
+              <h5 class="card-title">New This Week</h5>
+              <p class="card-text">3</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-white bg-warning">
+            <div class="card-body">
+              <h5 class="card-title">Pending Verifications</h5>
+              <p class="card-text">1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          Member List
+        </div>
+        <div class="card-body">
+          <table class="table table-striped">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                </tr>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Total Orders</th>
+                <th>Total Income</th>
+                <th>Actions</th>
+              </tr>
             </thead>
-            <tbody>
-                <!-- Isi data member akan di-generate dari JavaScript -->
-            </tbody>
-        </table>
-        <button id="backButton">Back</button>
+            <tbody id="memberTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // Fungsi kembali
-        document.getElementById("backButton").onclick = function () {
-            window.location.href = "index.html";
+  <script>
+    let members = JSON.parse(localStorage.getItem("members")) || [];
+    const memberCount = document.getElementById("memberCount");
+    const tableBody = document.getElementById("memberTableBody");
+
+    function getSummaryFromAbsensi(id) {
+      const absensi = JSON.parse(localStorage.getItem("absensi")) || {};
+      const logs = absensi[id] || [];
+      const totalOrder = logs.reduce((sum, a) => sum + (a.order || 0), 0);
+      const totalPendapatan = logs.reduce((sum, a) => sum + (a.pendapatan || 0), 0);
+      return { totalOrder, totalPendapatan };
+    }
+
+    function renderMembers() {
+      tableBody.innerHTML = "";
+      memberCount.textContent = members.length;
+      members.forEach((member, index) => {
+        const { totalOrder, totalPendapatan } = getSummaryFromAbsensi(member.id);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${member.id}</td>
+          <td>${member.name}</td>
+          <td>${member.email}</td>
+          <td>${totalOrder}</td>
+          <td>Rp ${totalPendapatan.toLocaleString()}</td>
+          <td class="action-buttons">
+            <button class="btn btn-sm btn-warning" onclick="editMember(${index})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteMember(${index})"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function deleteMember(index) {
+      if (confirm("Yakin ingin menghapus member ini?")) {
+        members.splice(index, 1);
+        localStorage.setItem("members", JSON.stringify(members));
+        renderMembers();
+      }
+    }
+
+    function editMember(index) {
+      const newName = prompt("Masukkan nama baru:", members[index].name);
+      const newEmail = prompt("Masukkan email baru:", members[index].email);
+      if (newName && newEmail) {
+        members[index].name = newName;
+        members[index].email = newEmail;
+        localStorage.setItem("members", JSON.stringify(members));
+        renderMembers();
+      }
+    }
+
+    function exportToExcel() {
+      if (members.length === 0) {
+        alert("Tidak ada data untuk diexport.");
+        return;
+      }
+
+      const dataToExport = members.map(member => {
+        const { totalOrder, totalPendapatan } = getSummaryFromAbsensi(member.id);
+        return {
+          ID: member.id,
+          Name: member.name,
+          Email: member.email,
+          TotalOrders: totalOrder,
+          TotalIncome: totalPendapatan
         };
+      });
 
-        // Ambil data member dari localStorage
-        const members = JSON.parse(localStorage.getItem("members")) || [];
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+      XLSX.writeFile(workbook, "AnjemSeka_Members.xlsx");
+    }
 
-        const tbody = document.getElementById("memberTable").getElementsByTagName("tbody")[0];
+    function logoutAdmin() {
+      localStorage.removeItem("adminLoggedIn");
+      window.location.href = "login_admin.html";
+    }
 
-        members.forEach(member => {
-            const row = document.createElement("tr");
+    renderMembers();
+  </script>
 
-            const idCell = document.createElement("td");
-            idCell.textContent = member.id;
-            row.appendChild(idCell);
-
-            const nameCell = document.createElement("td");
-            nameCell.textContent = member.name;
-            row.appendChild(nameCell);
-
-            const emailCell = document.createElement("td");
-            emailCell.textContent = member.email;
-            row.appendChild(emailCell);
-
-            tbody.appendChild(row);
-        });
-    </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

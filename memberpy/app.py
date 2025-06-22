@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -17,7 +18,7 @@ def create_database():
     connection.commit()
     connection.close()
 
-# Route untuk menambah member
+# Route: Add Member
 @app.route('/add_member', methods=['POST'])
 def add_member():
     data = request.json
@@ -31,20 +32,18 @@ def add_member():
     connection = sqlite3.connect('members.db')
     cursor = connection.cursor()
 
-    # Cek apakah ID sudah ada
     cursor.execute('SELECT id FROM members WHERE id = ?', (member_id,))
     if cursor.fetchone():
         connection.close()
         return jsonify({'status': 'error', 'message': 'Member ID already exists'}), 400
 
-    # Tambahkan member baru
     cursor.execute('INSERT INTO members (id, name, email) VALUES (?, ?, ?)', (member_id, name, email))
     connection.commit()
     connection.close()
 
     return jsonify({'status': 'success', 'message': 'Member added successfully'}), 200
 
-# Route untuk memverifikasi member
+# Route: Verify Member
 @app.route('/verify_member/<int:member_id>', methods=['GET'])
 def verify_member(member_id):
     connection = sqlite3.connect('members.db')
@@ -58,6 +57,18 @@ def verify_member(member_id):
     else:
         return jsonify({'status': 'error', 'message': 'Member not found'}), 404
 
+# Route: Dashboard
+@app.route('/dashboard')
+def dashboard():
+    connection = sqlite3.connect('members.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM members")
+    members = cursor.fetchall()
+    connection.close()
+    return render_template("dashboard.html", members=members)
+
+# Jalankan server
 if __name__ == '__main__':
     create_database()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
